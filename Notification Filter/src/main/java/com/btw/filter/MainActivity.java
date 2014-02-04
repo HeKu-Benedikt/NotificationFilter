@@ -4,11 +4,10 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,15 +16,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 ;
 
-public class Controll extends Activity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class MainActivity extends Activity
+implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+
+    private String[] workingApps = new String[]{"ingress"};
+
+    private String[] whitelist = new String[]{"neufahrn", "ottobrunn", "bruck", "eching", "freising", "hadern", "haar"};
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
+
+    private PackageManager pm = null;
+
+    private List<String> names = null;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -35,8 +45,23 @@ public class Controll extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_controll);
 
+        pm = getPackageManager();
+
+        List<ApplicationInfo> applications = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+        names = new ArrayList<String>();
+
+        for (ApplicationInfo info : applications) {
+
+            if ((info.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
+
+                names.add(String.valueOf(pm.getApplicationLabel(info)));
+
+            }
+        }
+
+        setContentView(R.layout.activity_controll);
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -51,9 +76,19 @@ public class Controll extends Activity
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-                .commit();
+
+        switch (position) {
+            case 0:
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, ApplicationFragment.newInstance(position + 1, names))
+                        .commit();
+                break;
+            case 1:
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, WhitelistFragment.newInstance(position + 1, whitelist))
+                        .commit();
+                break;
+        }
     }
 
     public void onSectionAttached(int number) {
@@ -64,28 +99,17 @@ public class Controll extends Activity
             case 2:
                 mTitle = getString(R.string.title_section2);
                 break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
         }
     }
 
     public void startFilter() {
-
         Intent serviceIntent = new Intent(this, FilterService.class);
         this.startService(serviceIntent);
-
     }
 
-    public void exampleNotification() {
-        NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationCompat.Builder ncomp = new NotificationCompat.Builder(this);
-        ncomp.setContentTitle("My Notification");
-        ncomp.setContentText("Notification Listener Service Example");
-        ncomp.setTicker("Notification Listener Service Example");
-        ncomp.setSmallIcon(R.drawable.ic_launcher);
-        ncomp.setAutoCancel(true);
-        nManager.notify((int) System.currentTimeMillis(), ncomp.build());
+    public void stopFilter() {
+        Intent serviceIntent = new Intent(this, FilterService.class);
+        this.stopService(serviceIntent);
     }
 
     public void restoreActionBar() {
@@ -158,9 +182,14 @@ public class Controll extends Activity
         @Override
         public void onAttach(Activity activity) {
             super.onAttach(activity);
-            ((Controll) activity).onSectionAttached(
+            ((MainActivity) activity).onSectionAttached(
                     getArguments().getInt(ARG_SECTION_NUMBER));
         }
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        return super.onOptionsItemSelected(menu.getItem(0));
+    }
 }

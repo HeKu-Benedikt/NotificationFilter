@@ -21,7 +21,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -105,7 +104,6 @@ public class NavigationDrawerFragment extends Fragment {
                 new String[]{
                         getString(R.string.title_section1),
                         getString(R.string.title_section2),
-                        getString(R.string.title_section3),
                 }));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
@@ -245,21 +243,29 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (mDrawerToggle.onOptionsItemSelected(item)) {
-            Controll act = (Controll) getActivity();
-            act.exampleNotification();
             return true;
         }
 
-        if (item.getItemId() == R.id.action_example) {
-            Toast.makeText(getActivity(), R.id.action_example, Toast.LENGTH_SHORT).show();
-            Log.i("Service should start now.", NavigationDrawerFragment.class.getSimpleName());
-            Controll act = (Controll) getActivity();
-            act.startFilter();
+        if (item.getItemId() == R.id.action_start) {
+
+
+            if (item.getTitle().toString().equalsIgnoreCase(getString(R.string.action_start))) {
+                Log.i("Service should start now.", NavigationDrawerFragment.class.getSimpleName());
+                MainActivity act = (MainActivity) getActivity();
+                act.startFilter();
+                item.setTitle(R.string.action_stop);
+            } else {
+                Log.i("Service should stop now.", NavigationDrawerFragment.class.getSimpleName());
+                MainActivity act = (MainActivity) getActivity();
+                act.stopFilter();
+                item.setTitle(R.string.action_start);
+            }
 
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
 
     /**
      * Per the navigation drawer design guidelines, updates the action bar to show the global app
