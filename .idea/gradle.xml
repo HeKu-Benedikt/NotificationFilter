@@ -3,10 +3,18 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="distributionType" value="WRAPPED" />
+        <option name="createEmptyContentRootDirectories" value="true" />
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Notification Filter" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
+    <option name="serviceDirectoryPath" value="$PROJECT_DIR$/../../gradle-1.9" />
   </component>
 </project>
 

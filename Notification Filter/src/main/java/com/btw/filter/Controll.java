@@ -1,22 +1,23 @@
 package com.btw.filter;
 
-import android.app.Activity;
-;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Build;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+;
 
 public class Controll extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -67,6 +68,24 @@ public class Controll extends Activity
                 mTitle = getString(R.string.title_section3);
                 break;
         }
+    }
+
+    public void startFilter() {
+
+        Intent serviceIntent = new Intent(this, FilterService.class);
+        this.startService(serviceIntent);
+
+    }
+
+    public void exampleNotification() {
+        NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder ncomp = new NotificationCompat.Builder(this);
+        ncomp.setContentTitle("My Notification");
+        ncomp.setContentText("Notification Listener Service Example");
+        ncomp.setTicker("Notification Listener Service Example");
+        ncomp.setSmallIcon(R.drawable.ic_launcher);
+        ncomp.setAutoCancel(true);
+        nManager.notify((int) System.currentTimeMillis(), ncomp.build());
     }
 
     public void restoreActionBar() {
