@@ -247,20 +247,12 @@ public class NavigationDrawerFragment extends Fragment {
         }
 
         if (item.getItemId() == R.id.action_start) {
-
-
-            if (item.getTitle().toString().equalsIgnoreCase(getString(R.string.action_start))) {
-                Log.i("Service should start now.", NavigationDrawerFragment.class.getSimpleName());
-                MainActivity act = (MainActivity) getActivity();
-                act.startFilter();
-                item.setTitle(R.string.action_stop);
-            } else {
-                Log.i("Service should stop now.", NavigationDrawerFragment.class.getSimpleName());
-                MainActivity act = (MainActivity) getActivity();
-                act.stopFilter();
-                item.setTitle(R.string.action_start);
-            }
-
+            Log.i("Service should start now.", NavigationDrawerFragment.class.getSimpleName());
+            mCallbacks.onFilterStart();
+            return true;
+        } else if (item.getItemId() == R.id.action_stop) {
+            Log.i("Service should stop now.", NavigationDrawerFragment.class.getSimpleName());
+            mCallbacks.onFilterStop();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -290,5 +282,10 @@ public class NavigationDrawerFragment extends Fragment {
          * Called when an item in the navigation drawer is selected.
          */
         void onNavigationDrawerItemSelected(int position);
+
+        void onFilterStart();
+
+        void onFilterStop();
+
     }
 }

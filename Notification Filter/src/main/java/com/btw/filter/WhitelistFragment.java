@@ -4,9 +4,12 @@ package com.btw.filter;
 import android.app.Activity;
 import android.app.ListFragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import java.util.List;
 
 
 /**
@@ -16,7 +19,13 @@ public class WhitelistFragment extends ListFragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
-    private String[] whitelist;
+    private WhitelistFragmentCallback mCallbacks;
+
+    private List<String> whitelist;
+
+    public interface WhitelistFragmentCallback {
+        public void onSectionAttached(int section_number);
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -28,11 +37,11 @@ public class WhitelistFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        // do something with the data
+        Log.i("selected", whitelist.get(position));
 
     }
 
-    public static WhitelistFragment newInstance(int sectionNumber, String[] whitelist) {
+    public static WhitelistFragment newInstance(int sectionNumber, List<String> whitelist) {
         WhitelistFragment fragment = new WhitelistFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
@@ -44,11 +53,15 @@ public class WhitelistFragment extends ListFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(
-                getArguments().getInt(ARG_SECTION_NUMBER));
+        try {
+            mCallbacks = (WhitelistFragmentCallback) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity must implement ApplicationFragmentCallbacks.");
+        }
+        mCallbacks.onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
     }
 
-    public void setWhitelist(String[] whitelist) {
+    public void setWhitelist(List<String> whitelist) {
         this.whitelist = whitelist;
     }
 

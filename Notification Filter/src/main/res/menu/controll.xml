@@ -4,7 +4,13 @@
     <item
         android:id="@+id/action_start"
         android:title="@string/action_start"
-        android:showAsAction="withText|ifRoom" />
+        android:showAsAction="withText|ifRoom"
+        android:visible="true" />
+    <item
+        android:id="@+id/action_stop"
+        android:title="@string/action_stop"
+        android:showAsAction="withText|ifRoom"
+        android:visible="false" />
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"

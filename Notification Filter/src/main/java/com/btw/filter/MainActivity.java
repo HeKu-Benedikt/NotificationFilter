@@ -2,31 +2,31 @@ package com.btw.filter;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.Fragment;
+import android.app.ActivityManager;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+
+import com.btw.filter.db.NFDbHelper;
+import com.btw.filter.db.WhitelistEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 
-;
-
 public class MainActivity extends Activity
-implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, ApplicationFragment.ApplicationFragmentCallbacks, WhitelistFragment.WhitelistFragmentCallback {
 
-    private String[] workingApps = new String[]{"ingress"};
+    public static final String ARG_SELECTED_APP = "selected_application";
 
-    private String[] whitelist = new String[]{"neufahrn", "ottobrunn", "bruck", "eching", "freising", "hadern", "haar"};
+    private MenuItem startItem;
+    private MenuItem stopItem;
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -36,6 +36,10 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
     private PackageManager pm = null;
 
     private List<String> names = null;
+
+    private List<WhitelistEntry> whitelist;
+
+    private List<String> whitelistforapp = new ArrayList<String>();
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -59,6 +63,14 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
                 names.add(String.valueOf(pm.getApplicationLabel(info)));
 
             }
+        }
+
+        NFDbHelper db = new NFDbHelper(this);
+
+        whitelist = db.getEntriesForPackage("ingress");
+
+        for (WhitelistEntry entry : whitelist) {
+            whitelistforapp.add(entry.getWhitelistEntry());
         }
 
         setContentView(R.layout.activity_controll);
@@ -85,12 +97,34 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
                 break;
             case 1:
                 fragmentManager.beginTransaction()
-                        .replace(R.id.container, WhitelistFragment.newInstance(position + 1, whitelist))
+                        .replace(R.id.container, WhitelistFragment.newInstance(position + 1, whitelistforapp))
                         .commit();
                 break;
         }
     }
 
+    @Override
+    public void onFilterStart() {
+
+        Intent serviceIntent = new Intent(this, FilterService.class);
+        serviceIntent.putExtra("whitelist", whitelistforapp.toArray(new String[whitelistforapp.size()]));
+        this.startService(serviceIntent);
+
+        swapButtonsToStop();
+
+    }
+
+    @Override
+    public void onFilterStop() {
+
+        Intent serviceIntent = new Intent(this, FilterService.class);
+        this.stopService(serviceIntent);
+
+        swapButtonsToStart();
+
+    }
+
+    @Override
     public void onSectionAttached(int number) {
         switch (number) {
             case 1:
@@ -102,16 +136,6 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
         }
     }
 
-    public void startFilter() {
-        Intent serviceIntent = new Intent(this, FilterService.class);
-        this.startService(serviceIntent);
-    }
-
-    public void stopFilter() {
-        Intent serviceIntent = new Intent(this, FilterService.class);
-        this.stopService(serviceIntent);
-    }
-
     public void restoreActionBar() {
         ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
@@ -119,9 +143,19 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
         actionBar.setTitle(mTitle);
     }
 
+    private void swapButtonsToStop() {
+        stopItem.setVisible(true);
+        startItem.setVisible(false);
+    }
+
+    private void swapButtonsToStart() {
+        stopItem.setVisible(false);
+        startItem.setVisible(true);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
         if (!mNavigationDrawerFragment.isDrawerOpen()) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
@@ -134,6 +168,17 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        startItem = menu.findItem(R.id.action_start);
+        stopItem = menu.findItem(R.id.action_stop);
+
+        if (startItem != null && startItem != null && isMyServiceRunning()) {
+            swapButtonsToStop();
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -142,54 +187,36 @@ implements NavigationDrawerFragment.NavigationDrawerCallbacks {
         if (id == R.id.action_settings) {
             return true;
         }
+        if (id == R.id.action_start) {
+            onFilterStart();
+            return true;
+        }
+        if (id == R.id.action_stop) {
+            onFilterStop();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_controll, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
-    }
-
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
+    public void onListItemSelected(String application) {
 
-        return super.onOptionsItemSelected(menu.getItem(0));
+        //NFDbHelper db = new NFDbHelper(this);
+
+        //list = db.getEntriesForPackage(application);
+
+        Log.i("Selected", application);
     }
+
+    private boolean isMyServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (FilterService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }

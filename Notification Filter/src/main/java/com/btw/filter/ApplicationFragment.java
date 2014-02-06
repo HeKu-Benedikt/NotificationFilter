@@ -11,9 +11,17 @@ import java.util.List;
 
 public class ApplicationFragment extends ListFragment {
 
+    private ApplicationFragmentCallbacks mCallbacks;
+
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     private String[] applications;
+
+    public interface ApplicationFragmentCallbacks {
+        public void onListItemSelected(String application);
+
+        public void onSectionAttached(int section_number);
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -27,6 +35,7 @@ public class ApplicationFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         // do something with the data
+        mCallbacks.onListItemSelected(applications[position]);
 
     }
 
@@ -35,19 +44,19 @@ public class ApplicationFragment extends ListFragment {
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
-
-
         fragment.setApplications(names.toArray(new String[names.size()]));
-
         return fragment;
     }
-
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(
-                getArguments().getInt(ARG_SECTION_NUMBER));
+        try {
+            mCallbacks = (ApplicationFragmentCallbacks) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity must implement ApplicationFragmentCallbacks.");
+        }
+        mCallbacks.onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
     }
 
     public void setApplications(String[] applications) {

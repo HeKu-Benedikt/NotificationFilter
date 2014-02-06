@@ -17,16 +17,19 @@ public class FilterService extends NotificationListenerService {
 
     private String[] workingApps = new String[]{"ingress"};
 
-    private String[] whitelist = new String[]{"neufahrn", "ottobrunn", "bruck", "eching", "freising", "hadern", "haar", "garching"};
+    private String[] whitelist;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
         Log.i("Service created", TAG);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        whitelist = intent.getStringArrayExtra("whitelist");
 
         Log.i("Service started", TAG);
         return super.onStartCommand(intent, flags, startId);
@@ -41,34 +44,40 @@ public class FilterService extends NotificationListenerService {
 
             CharSequence[] lines = statusBarNotification.getNotification().extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
 
+            boolean delete = true;
+
             for (int i = 0; i < lines.length; i++) {
 
-                Log.i("Line " + i, String.valueOf(lines[i]));
-
-                boolean delete = true;
+                Log.i("In Progress " + i, String.valueOf(lines[i]));
 
                 for (String white : whitelist) {
 
                     if (String.valueOf(lines[i]).toLowerCase().contains(white)) {
+                        Log.i("Delete[False] " + i, String.valueOf(lines[i]));
                         delete = false;
                     }
 
                 }
 
-                if (delete) {
-                    cancelNotification(statusBarNotification.getPackageName(), statusBarNotification.getTag(), statusBarNotification.getId());
-                }
+            }
 
+            if (delete) {
+
+                cancelNotification(statusBarNotification.getPackageName(), statusBarNotification.getTag(), statusBarNotification.getId());
+                Log.i("Cancel notification", statusBarNotification.getNotification().extras.getString(Notification.EXTRA_TITLE));
             }
 
         }
 
     }
 
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     public void onNotificationRemoved(StatusBarNotification statusBarNotification) {
+
         Log.i("Notification Removed ", statusBarNotification.getNotification().extras.getString(Notification.EXTRA_TITLE));
+
     }
 
     @Override
